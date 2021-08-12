@@ -1,0 +1,41 @@
+version: '3'
+networks:
+  isolation-network:
+    driver: bridge
+      
+services:  
+  mlservice:
+    build:  
+    # dockerfile: Dockerfile
+      context: ./mlservice
+    # container_name: mlservice
+    volumes:
+       - ./mlservice:/usr/src/mlservice
+       - /usr/src/mlservice/node_modules    
+    # image: mlservice:latest
+    ports:
+      - "3050:3050"
+    networks:
+      - isolation-network    
+
+  app:
+    build:  
+    #  dockerfile: Dockerfile
+      context: ./ethpayment  
+    # container_name: ethpayment
+    # docker build -t eth_proto -f Dockerfile ./ethpayment
+    restart: always
+    ports:
+      - "3000:3000"      
+    stdin_open: true
+    depends_on:
+      - mlservice    
+    volumes:
+      - ./ethpayment:/usr/src/ethpayment
+      - /usr/src/ethpayment/node_modules    
+    # links: 
+    #   - mlservice
+    networks:
+      - isolation-network
+      
+  
