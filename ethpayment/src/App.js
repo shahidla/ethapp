@@ -1,168 +1,159 @@
 import React from "react";
 import web3 from "./web3";
-import lottery from "./lottery";
-const FormData = require('form-data');
+import contract from "./contractABI";
+const FormData = require("form-data");
 const fetch = require("node-fetch");
 class App extends React.Component {
   state = {
-    manager: "",
-    players: [],
+    creator: "",
+    contributors: [],
     balance: "",
     value: "",
     message: "",
-    mlmsg:"",
+    mlmsg: "",
+    glact1: "",
+    prob1: "",
+    glact2: "",
+    prob2: "",
     selectedFile: null,
+    contractAddress:"",
+    charity: '0x8f730fB15772EC8fFCE0954d45baDbeFdbEDA8a8',
   };
   async componentDidMount() {
-    const manager = await lottery.methods.manager().call();
-    const players = await lottery.methods.getPlayers().call();
-    const balance = await web3.eth.getBalance(lottery.options.address);
-
-    this.setState({ manager, players, balance });
+    const creator = await contract.methods.creator().call();
+    const contractAddress = await contract.methods.contractAddress().call();
+    const contributors = await contract.methods.getContributors().call();
+    const balance = await web3.eth.getBalance(contract.options.address);
+    this.setState({ creator, contractAddress, contributors, balance });
   }
 
-  onSubmit = async (event) => {
+  // On file select (from the pop up)
+  onFileChange = (event) => {
+    // Update the state
+    this.setState({ message: "file uploaded." });
+    this.setState({ selectedFile: event.target.files[0] });
+  };
+ 
+  // Donate
+  onDonate =  async(event) => {
     event.preventDefault();
-
-   // const accounts = await web3.eth.getAccounts();
-
-    this.setState({ message: "Waiting on transaction success.." });
-
-    // const apiUrl = 'http://localhost:3050/';
-
-    fetch('/ml')
-      .then((response) => response.json())
-      .then((data) => this.setState({ mlmsg: JSON.stringify(data.message) }));
-
-    //   const response = await fetch('/ml', {
-    //     method: 'GET',
-    //     // headers: {'Content-Type': 'application/json'},
-    //     body: JSON.stringify({user: data})
-    //   })
-
-    // return await response.json();
-      // fetch(apiUrl).then(async response => {
-      //   try {
-      //    const data = await response.json()
-      //    console.log('response data?', data)
-      //  } catch(error) {
-      //    console.log('Error happened here!')
-      //    console.error(error)
-      //  }
-      // })
-
-      // fetch('https://api.github.com/users/hacktivist123/repos')
-      // .then(response => response.json())
-      // .then(data => res.send(data));
-
-    //  await lottery.methods.sendpayment().send({
-    //   from: accounts[0],
-    //   value: web3.utils.toWei(this.state.value, "ether"),
-    //   gas: "1000000" 
-    //});
-
-    this.setState({ message: "request sent.." });
-  };
-
-  onClick = async () => {
-    const accounts = await web3.eth.getAccounts();
-
-    this.setState({ message: "Waiting on transaction success..." });
-
+    this.setState({ message: "Donating" });
     
-    await lottery.methods.pickWinner().send({
+    const totBalance = await web3.eth.getBalance(contract.options.address);
+    const accounts = await web3.eth.getAccounts();
+    await contract.methods.Donate(this.state.charity).send({
       from: accounts[0],
-    });
-
-    this.setState({ message: "A winner has been picked!" });
+      value: totBalance,
+      gas: "1000000", 
+    });    
+    this.setState({ message: "Donated" });
   };
 
-  // state = { 
-  
-  //   // Initially, no file is selected 
-  //   selectedFile: null
-  // }; 
-   
-  // On file select (from the pop up) 
-  onFileChange = event => { 
-    // Update the state 
-    this.setState({ selectedFile: event.target.files[0] }); 
-  }; 
-   
-  // On file upload (click the upload button) 
-  onFileUpload = () => { 
-    // Create an object of formData 
-    const formData = new FormData(); 
-   
-    // Update the formData object 
-    formData.append( 
-      "upload", 
-      this.state.selectedFile, 
-      this.state.selectedFile.name 
-    ); 
-   
-    // Details of the uploaded file 
-    console.log(this.state.selectedFile); 
-   
-    // Request made to the backend api 
-    // Send formData object 
-    // fetch('/ml/file', formData)
-    //   .then((response) => response.json())
-    //   .then((data) => this.setState({ mlmsg: JSON.stringify(data.message) }));
+  // On file upload (click the upload button)
+  onFileUpload = async (event) => {
+    event.preventDefault();
+    this.setState({ message: "Awaiting for Payment Approval." });
+    const accounts = await web3.eth.getAccounts();
+    await contract.methods.sendpayContract().send({
+      from: accounts[0],
+      value: web3.utils.toWei(this.state.value, "ether"),
+      gas: "1000000",
+    });
+    this.setState({ message: "Transaction Successful." });
 
-      fetch('/ml/file', {
-        method: 'POST',
-        body: formData,
-        //headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept' : 'application/json' }
-             })
-        .then((response) => response.json())
-        .then((data) => this.setState({ mlmsg: JSON.stringify(data.message) }));
+    //Update Balance
+    const newBalance = await web3.eth.getBalance(contract.options.address);
+    this.setState({ balance: newBalance, message: "Balance Updated." });
+    const newContributors = await contract.methods.getContributors().call();
+    this.setState({ contributors: newContributors, message: "Contributors Updated." });
 
-  }; 
+    // Create an object of formData
+    const formData = new FormData();
+
+    // Update the formData object
+    formData.append(
+      "upload",
+      this.state.selectedFile,
+      this.state.selectedFile.name
+    );
+
+    // Details of the uploaded file
+    //console.log(this.state.selectedFile);
+    this.setState({ message: "File sent for Recommendations." });
+    fetch("/ml/file", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) =>
+        this.setState({
+          glact1: JSON.stringify(data.RGA1),
+          prob1: JSON.stringify(data.PGA1),
+          glact2: JSON.stringify(data.RGA2),
+          prob2: JSON.stringify(data.PGA2),
+        })
+      );
+
+
+      this.setState({ message: "Transaction Complete." });
+  };
 
   render() {
     return (
       <div>
-        <h2>ML Service</h2>
+        <h3>
+          Prototype: Multi-Service Application using Docker, Etherium Smart
+          Contract and SAP AI Business Services(IOR)
+        </h3>
+
+        <hr />
+
+        <fieldset>
+          <legend>Upload a file get G/L account recommendations:</legend>
+          <br></br>
+          <label>Ether Amount:</label>
+          <input
+            value={this.state.value}
+            id="ethamt"
+            name="ethamt"
+            onChange={(event) => this.setState({ value: event.target.value })}
+          />
+          <br></br>
+          <label>Upload a File:</label>
+          <input type="file" onChange={this.onFileChange} />
+          <br></br><br></br>
+          <button onClick={this.onFileUpload}>Submit</button>
+        </fieldset>
+        <hr />
+
+        <h3>
+          {" "}
+          Recommendations for G/L Accounts from SAP AI Business Services{" "}
+        </h3>
         <p>
-          Contract is managed by {this.state.manager}. 
-          There are currently{" "}.
-          {this.state.players.length} people entered, competing to win{" "}.
-          {web3.utils.fromWei(this.state.balance, "ether")} ether!.
-          This is a message from ML service {this.state.mlmsg}.
+          {" "}
+          Top 1 Recommended G/L Account: {this.state.glact1} with probability:{" "}
+          {this.state.prob1}.{" "}
         </p>
-
+        <p>
+          {" "}
+          Top 2 Recommended G/L Account: {this.state.glact2} with probability:{" "}
+          {this.state.prob2}.{" "}
+        </p>
         <hr />
-        <form onSubmit={this.onSubmit}>
-          <h4>Enter the amount</h4>
-          <div>
-            <label>Amount of ether to enter</label>
-            <input
-              value={this.state.value}
-              onChange={(event) => this.setState({ value: event.target.value })}
-            />
-          </div>
-          <button>Enter</button>
-        </form>
+        <h3> Smart Contract Information </h3>
+        <p>
+          Contract Owned by {this.state.creator}. <br></br>
+          Contract Value/Contributed Amount:{" "} {web3.utils.fromWei(this.state.balance, 'ether')} Ether. <br></br>
+          Total Contributors: {this.state.contributors.length}.
+          <br></br>
+          <br></br>
+          <button onClick={this.onDonate}>Donate</button>
+        </p>
         <hr />
-
-        <hr />
-          <h4>Upload a File to Predict</h4>
-          <div>
-            <label>Upload a File</label>
-            <input type="file" onChange={this.onFileChange} /> 
-                <button onClick={this.onFileUpload}> 
-                  Upload! 
-                </button> 
-          </div>
-        <hr />
-
-        <h4>Ready to pick a winner?</h4>
-        <button onClick={this.onClick}>Pick a winner!</button>
-
-        <hr />
-
-        <h1>{this.state.message}</h1>
+        <h3> Messages </h3>
+        <h3>{this.state.message}</h3>
+        {/* <h3>{this.state.balance }</h3> */}
       </div>
     );
   }
