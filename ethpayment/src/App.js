@@ -16,8 +16,8 @@ class App extends React.Component {
     glact2: "",
     prob2: "",
     selectedFile: null,
-    contractAddress:"",
-    charity: '0x8f730fB15772EC8fFCE0954d45baDbeFdbEDA8a8',
+    contractAddress: "",
+    charity: "0x8f730fB15772EC8fFCE0954d45baDbeFdbEDA8a8",
   };
   async componentDidMount() {
     const creator = await contract.methods.creator().call();
@@ -33,19 +33,18 @@ class App extends React.Component {
     this.setState({ message: "file uploaded." });
     this.setState({ selectedFile: event.target.files[0] });
   };
- 
+
   // Donate
-  onDonate =  async(event) => {
+  onDonate = async (event) => {
     event.preventDefault();
     this.setState({ message: "Donating" });
-    
-    const totBalance = await web3.eth.getBalance(contract.options.address);
+
+    //const totBalance = await web3.eth.getBalance(contract.options.address);
     const accounts = await web3.eth.getAccounts();
     await contract.methods.Donate(this.state.charity).send({
       from: accounts[0],
-      value: totBalance,
-      gas: "1000000", 
-    });    
+      gas: "1000000",
+    });
     this.setState({ message: "Donated" });
   };
 
@@ -65,7 +64,10 @@ class App extends React.Component {
     const newBalance = await web3.eth.getBalance(contract.options.address);
     this.setState({ balance: newBalance, message: "Balance Updated." });
     const newContributors = await contract.methods.getContributors().call();
-    this.setState({ contributors: newContributors, message: "Contributors Updated." });
+    this.setState({
+      contributors: newContributors,
+      message: "Contributors Updated.",
+    });
 
     // Create an object of formData
     const formData = new FormData();
@@ -79,23 +81,31 @@ class App extends React.Component {
 
     // Details of the uploaded file
     //console.log(this.state.selectedFile);
-    this.setState({ message: "File sent for Recommendations." });
-    fetch("/ml/file", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) =>
-        this.setState({
-          glact1: JSON.stringify(data.RGA1),
-          prob1: JSON.stringify(data.PGA1),
-          glact2: JSON.stringify(data.RGA2),
-          prob2: JSON.stringify(data.PGA2),
+    this.setState({ message: "File sent for Inovice Object Recommendation" });
+
+    let mldata = await mlresultfunc();
+    
+    this.setState({
+      glact1: JSON.stringify(mldata.RGA1),
+      prob1: JSON.stringify(mldata.PGA1),
+      glact2: JSON.stringify(mldata.RGA2),
+      prob2: JSON.stringify(mldata.PGA2),
+    });
+
+    function mlresultfunc() {
+      return new Promise(function (resolve, reject) {
+        fetch("/ml/file", {
+          method: "POST",
+          body: formData,
         })
-      );
-
-
-      this.setState({ message: "Transaction Complete." });
+          .then((response) => response.json())
+          .then((data) =>
+            resolve(data)            
+          );
+      });
+    }
+        
+    this.setState({ message: "Transaction Complete." });
   };
 
   render() {
@@ -121,7 +131,8 @@ class App extends React.Component {
           <br></br>
           <label>Upload a File:</label>
           <input type="file" onChange={this.onFileChange} />
-          <br></br><br></br>
+          <br></br>
+          <br></br>
           <button onClick={this.onFileUpload}>Submit</button>
         </fieldset>
         <hr />
@@ -144,9 +155,9 @@ class App extends React.Component {
         <h3> Smart Contract Information </h3>
         <p>
           Contract Owned by {this.state.creator}. <br></br>
-          Contract Value/Contributed Amount:{" "} {web3.utils.fromWei(this.state.balance, 'ether')} Ether. <br></br>
-          Total Contributors: {this.state.contributors.length}.
-          <br></br>
+          Contract Value/Contributed Amount:{" "}
+          {web3.utils.fromWei(this.state.balance, "ether")} Ether. <br></br>
+          Total Contributors: {this.state.contributors.length}.<br></br>
           <br></br>
           <button onClick={this.onDonate}>Donate</button>
         </p>

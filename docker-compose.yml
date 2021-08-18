@@ -3,39 +3,65 @@ networks:
   isolation-network:
     driver: bridge
       
+# services:  
+
+#   mlservice:
+#     build:  
+#       context: ./mlservice
+#     volumes:
+#        - ./mlservice:/usr/src/mlservice
+#        - /usr/src/mlservice/node_modules    
+#     ports:
+#       - "3050:3050"
+#     networks:
+#       - isolation-network    
+
+#   app:
+#     build:  
+#       context: ./ethpayment  
+#     restart: always
+#     ports:
+#       - "3000:3000"      
+#     stdin_open: true
+#     depends_on:
+#       - mlservice    
+#     volumes:
+#       - ./ethpayment:/usr/src/ethpayment
+#       - /usr/src/ethpayment/node_modules    
+#     networks:
+#       - isolation-network
+      
 services:  
+
   mlservice:
+    image: shahidla/mlservice
+    container_name: mlservice
+    restart: always
     build:  
-    # dockerfile: Dockerfile
+      dockerfile: shahidla/mlservice
       context: ./mlservice
-    # container_name: mlservice
     volumes:
        - ./mlservice:/usr/src/mlservice
        - /usr/src/mlservice/node_modules    
-    # image: mlservice:latest
     ports:
       - "3050:3050"
     networks:
       - isolation-network    
 
   app:
-    build:  
-    #  dockerfile: Dockerfile
-      context: ./ethpayment  
-    # container_name: ethpayment
-    # docker build -t eth_proto -f Dockerfile ./ethpayment
+    image: shahidla/ethpayment
+    container_name: ethpayment
     restart: always
+    build:  
+      context: ./ethpayment
+      dockerfile: shahidla/ethpayment   
     ports:
-      - "3000:3000"      
-    stdin_open: true
+      - "3001:3000"      
     depends_on:
       - mlservice    
     volumes:
       - ./ethpayment:/usr/src/ethpayment
       - /usr/src/ethpayment/node_modules    
-    # links: 
-    #   - mlservice
     networks:
       - isolation-network
       
-  
