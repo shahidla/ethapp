@@ -1,6 +1,5 @@
 import web3 from "./web3";
 
-//const address = '0x923E312272b44F14e743b2FB5D04d91a339B9337';
 const address = '0x11b02bE7e2FBBfa3618Dedddbc01016a214A002D';  //new version solc
 
   const abi = [

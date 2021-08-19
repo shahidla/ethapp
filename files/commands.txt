@@ -1,0 +1,30 @@
+
+
+Docker Hub: from their respective folders
+docker build . --tag shahidla/ethpayment
+docker push shahidla/ethpayment
+Docker: from the respective folders
+docker build . --tag shahidla/mlservice
+docker push shahidla/mlservice
+
+Kompose:
+Powershell: from the docker-compose folder
+kompose convert
+
+GitHub: from the root folder
+git init -b main
+git rm -r --cached . (if you have issues with gitignore)
+git add .
+git commit -m "Final commit"
+git remote set-url origin https://github.com/shahidla/eth.git 
+git push origin main
+
+kyma:
+set KUBECONFIG="C:\Users\C5271717\Downloads\kubeconfig.yml"
+kubectl config get-contexts  
+kubectl create ns eth
+kubectl -n eth apply -f app-service.yaml
+kubectl -n eth apply -f mlservice-service.yaml
+kubectl -n eth apply -f app-deployment.yaml
+kubectl -n eth apply -f mlservice-deployment.yaml
+

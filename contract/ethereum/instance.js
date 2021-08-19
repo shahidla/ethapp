@@ -1,3 +1,4 @@
+// test file
 import Web3 from "web3";
 const compilePay = require('./build/Pay.json');
 

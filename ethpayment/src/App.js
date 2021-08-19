@@ -46,6 +46,9 @@ class App extends React.Component {
       gas: "1000000",
     });
     this.setState({ message: "Donated" });
+    //Update Balance
+    const newBalance = await web3.eth.getBalance(contract.options.address);
+    this.setState({ balance: newBalance, message: "Balance Updated." });    
   };
 
   // On file upload (click the upload button)
@@ -112,7 +115,7 @@ class App extends React.Component {
     return (
       <div>
         <h3>
-          Prototype: Multi-Service Application using Docker, Etherium Smart
+          Prototype: Multi-Service Application using Docker, Ethereum Smart
           Contract and SAP AI Business Services(IOR)
         </h3>
 
