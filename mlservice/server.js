@@ -29,10 +29,10 @@ objmsg.message;
 const ior_url =
   "https://invoice-object-recommendation-trial.cfapps.eu10.hana.ondemand.com/api/v1/ivp/inference";
 const clientID =
-  "sb-5a752137-056b-4428-ad65-f7fbe088ba8e!b95758|ior-trial!b51213";
-const clientSecret = "Z5WwyNU7Hmxl/GKQE2esUSsl0Fk=";
+  "sb-5a752137-213";
+const clientSecret = "Z5WwyNUsUSsl0Fk=";
 const url =
-  "https://86e2f670trial.authentication.eu10.hana.ondemand.com/oauth/token";
+  "https://trial.authentication.eu10.hana.ondemand.com/oauth/token";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
